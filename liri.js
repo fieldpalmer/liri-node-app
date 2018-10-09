@@ -1,4 +1,3 @@
-//Dependencies
 //read & set environment variables
 require('dotenv').config();
 //import api keys
@@ -17,19 +16,7 @@ let spotify = new Spotify(keys.spotify);
 
 // node liri.js spotify-this-song <song name>
 const searchSpotify = (songName) => {
-    //search error default
-    if (songName === undefined) {
-        songName = "What's my age again";
-    }    
-    //loop through process.argv to find query
-    for (var i = 3; i < process.argv.length; i++) {
-        if (i > 3 && i < process.argv.length) {
-            songName = songName + ' ' + process.argv[i];
-        }
-        else {
-            songName += process.argv[i];
-        }
-    }
+    
     spotify
         .search({
             type: 'track',
@@ -53,21 +40,16 @@ const searchSpotify = (songName) => {
                 console.log("Preview Link: " + sample);
                 console.log("************************************");
             }
+            //search error default
+            if (songName === undefined) {
+                songName = "What's my age again";
+            }
         }
     );
 };
 
-
 //node liri.js concert-this <artist/band name>
 const searchBandsInTown = (bandName) => {
-    for ( var i = 3 ; i < process.argv.length ; i++) {
-        if (i > 3 && i < process.argv.length) {
-            bandName = bandName + ' ' + process.argv[i];
-        }
-        else {
-            bandName += process.argv[i];
-        }
-    }
 
     let queryUrl = "https://rest.bandsintown.com/artists/" + bandName + "/events?app_id=codingbootcamp";
 
@@ -96,21 +78,11 @@ const searchBandsInTown = (bandName) => {
     )
 };
 
-
 //node liri.js movie-this <movie name here>
 const searchOMDB = (movieName) => {
     //default error 
     if (movieName === undefined) {
         movieName = "Mr. Nobody";
-    }
-    //for loop to add + to movie name
-    for (var i = 3; i < process.argv.length; i++) {
-        if (i > 3 && i < process.argv.length) {
-            movieName = movieName + ' ' + process.argv[i];
-        }
-        else {
-            movieName += process.argv[i];
-        }
     }
     // Then run a request to the OMDB API with the movie specified
     var queryUrl = 'http://www.omdbapi.com/?apikey=trilogy&t=' + movieName + "&y=&plot=full&tomatoes=true";
@@ -133,31 +105,38 @@ const searchOMDB = (movieName) => {
 
 //node liri.js do-what-it-says
 const obeyText = () => {
-    fs.readFile('random.txt', 'utf8', function(err, data){
-        if(err) {
-            console.log("Error occurred!\n" + err);
-        }
-        let songName = data.split(',')[1];
-        searchSpotify(songName);
-    })
-    //this is cheating, it's not actually reading the whole file and determining what to run I'm cutting the corner ==> running out of time quickly
-}
+    fs.readFile("random.txt", "utf8", function(data) {
+      var dataArr = data.split(",");
+      if (dataArr.length === 2) {
+        liriQuery(dataArr[0], dataArr[1]);
+      } else if (dataArr.length === 1) {
+        liriQuery(dataArr[0]);
+      }
+    });
+};
 
 // switch statement to determine user request method
-let operator = process.argv[2];
-switch (operator) {
-    case 'concert-this':
-        searchBandsInTown(bandName);
-        break;
-    case 'spotify-this-song':
-        searchSpotify(songName);
-        break;
-    case 'movie-this':
-        searchOMDB(movieName);
-        break;    
-    case 'do-what-it-says':
-        obeyText();
-        break;
-    default:
-        console.log("you've got an error dude");
+const liriQuery = (caseCommand, functionArg) => {
+    switch (caseCommand) {
+        case 'concert-this':
+            searchBandsInTown(functionArg);
+            break;
+        case 'spotify-this-song':
+            searchSpotify(functionArg);
+            break;
+        case 'movie-this':
+            searchOMDB(functionArg);
+            break;    
+        case 'do-what-it-says':
+            obeyText();
+            break;
+        default:
+            console.log("sorry friend, we've got an error");
+    };
+}
+
+const runLiri = (arg1, arg2) => {
+    liriQuery(arg1, arg2);
 };
+
+runLiri(process.argv[2], process.argv.slice(3).join(" "));
