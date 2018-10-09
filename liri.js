@@ -14,38 +14,37 @@ const moment = require('moment');
 //istantiate spotify api client with out secret info
 let spotify = new Spotify(keys.spotify);
 
+// Helper function that gets the artist name
+const getArtists = function(artist) {
+    return artist.name;
+};
+
 // node liri.js spotify-this-song <song name>
 const searchSpotify = (songName) => {
-    
-    spotify
-        .search({
-            type: 'track',
-            query: songName,
-            limit: 10
-        },
-        function(err, data) {
-            if (err) {
-                return console.log('Error occurred: ' + err);
-            }
-            //loop through returned spotify data to display song info
-            for (var i = 0 ; i < data.tracks.items.length ; i++) {
-                let artist = data.tracks.items[i].artist[0].name;
-                let trackName = data.tracks.items[i].name;
-                let album = data.tracks.items[i].album.name;
-                let sample = data.tracks.items[i].preview_url;
-                console.log("Song #" + (i+1) + " ************************");
-                console.log("Song Name: " + trackName);
-                console.log("Artist: " + artist);
-                console.log("Album: " + album);
-                console.log("Preview Link: " + sample);
-                console.log("************************************");
-            }
-            //search error default
-            if (songName === undefined) {
-                songName = "What's my age again";
-            }
+    //search error default
+    if (songName === undefined) {
+        songName = "What's my age again";
+    }
+
+    spotify.search({
+        type: 'track',
+        query: songName,
+    },
+    function(err, data) {
+        if (err) {
+            return console.log('Error occurred: ' + err);
         }
-    );
+        var songs = data.tracks.items;
+        //loop through returned spotify data to display song info
+        for (var i = 0 ; i < songs.length ; i++) {
+            console.log(" ----------- Song #" + (i+1) + "------------");
+            console.log("Song Name: " + songs[i].name);
+            console.log("Artist: " + songs[i].artists.map(getArtists));
+            console.log("Album: " + songs[i].album.name);
+            console.log("Preview Link: " + songs[i].preview_url);
+            console.log("************************************");
+        }
+    });
 };
 
 //node liri.js concert-this <artist/band name>
@@ -55,12 +54,12 @@ const searchBandsInTown = (bandName) => {
 
     axios.get(queryUrl).then(
         function(response) {
-            if (!response.data) {
+            if (!response.data.length) {
                 console.log("Sorry, nothing found!");
             }
 
             console.log("Concerts coming up for " + bandName +":")
-            for( var i = 0 ; i < response.data[i].length ; i++) {
+            for( var i = 0 ; i < response.data.length ; i++) {
                 let name = response.data[i].venue.name;
                 let city = response.data[i].venue.city;
                 let country = response.data[i].venue.country;
@@ -105,7 +104,7 @@ const searchOMDB = (movieName) => {
 
 //node liri.js do-what-it-says
 const obeyText = () => {
-    fs.readFile("random.txt", "utf8", function(data) {
+    fs.readFile("random.txt", "utf8", function(err, data) {
       var dataArr = data.split(",");
       if (dataArr.length === 2) {
         liriQuery(dataArr[0], dataArr[1]);
